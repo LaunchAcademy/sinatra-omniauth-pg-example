@@ -8,8 +8,27 @@ require 'sinatra/flash'
 require 'omniauth-github'
 require 'pg'
 
+require_relative 'models/database'
+
+def production_database_config
+  db_url_parts = ENV['DATABASE_URL'].split(/\/|:|@/)
+
+  {
+    user: db_url_parts[3],
+    password: db_url_parts[4],
+    host: db_url_parts[5],
+    dbname: db_url_parts[7]
+  }
+end
+
+configure :production do
+  set :database_config, production_database_config
+end
+
 configure :development do
   require 'pry'
+
+  set :database_config, { dbname: 'sinatra_omniauth_dev' }
 end
 
 configure do
@@ -17,15 +36,6 @@ configure do
 
   use OmniAuth::Builder do
     provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
-  end
-end
-
-def db_connection
-  begin
-    connection = PG.connect(dbname: 'sinatra_omniauth_dev')
-    yield(connection)
-  ensure
-    connection.close
   end
 end
 
@@ -47,7 +57,7 @@ end
 def find_user_by_uid(uid)
   sql = 'SELECT * FROM users WHERE uid = $1 LIMIT 1'
 
-  user = db_connection do |db|
+  user = Database.connection do |db|
     db.exec_params(sql, [uid])
   end
 
@@ -57,7 +67,7 @@ end
 def find_user_by_id(id)
   sql = 'SELECT * FROM users WHERE id = $1 LIMIT 1'
 
-  user = db_connection do |db|
+  user = Database.connection do |db|
     db.exec_params(sql, [id])
   end
 
@@ -70,13 +80,13 @@ def create_user(attr)
     VALUES ($1, $2, $3, $4, $5, $6);
   }
 
-  db_connection do |db|
+  Database.connection do |db|
     db.exec_params(sql, attr.values)
   end
 end
 
 def all_users
-  db_connection do |db|
+  Database.connection do |db|
     db.exec('SELECT * FROM users')
   end
 end
