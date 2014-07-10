@@ -31,12 +31,12 @@ end
 
 def user_from_omniauth(auth)
   {
-    uid: auth['uid'],
-    provider: auth['provider'],
-    username: auth['info']['nickname'],
-    name: auth['info']['name'],
-    email: auth['info']['email'],
-    avatar_url: auth['info']['image']
+    uid: auth.uid,
+    provider: auth.provider,
+    username: auth.info.nickname,
+    name: auth.info.name,
+    email: auth.info.email,
+    avatar_url: auth.info.image
   }
 end
 
