@@ -8,16 +8,17 @@ require 'sinatra/flash'
 require 'omniauth-github'
 require 'pg'
 
-configure :development do
-  require 'pry'
-end
-
 configure do
   enable :sessions
+  set :session_secret, ENV['SESSION_SECRET']
 
   use OmniAuth::Builder do
     provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
   end
+end
+
+configure :development do
+  require 'pry'
 end
 
 def db_connection
